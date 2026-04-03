@@ -171,10 +171,10 @@
     CAT_ID = getParam('cat');
     if (!CAT_ID) { showState('🔗', 'No Catalog Found', 'Please use a valid catalog link.'); return; }
 
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(GAS_URL + '?action=getCatalog&cat=' + CAT_ID);
+    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(GAS_URL + '?action=getCatalog&cat=' + CAT_ID);
     fetch(proxyUrl)
       .then(r => r.json())
-      .then(r => handleLoad(JSON.parse(r.contents)))
+      .then(handleLoad)
       .catch(err => showState('⚠️', 'Error', 'Failed to load catalog'));
   };
 
@@ -305,11 +305,10 @@
       '&cartItems=' + encodeURIComponent(JSON.stringify(cart)) +
       '&customerName=' + encodeURIComponent(name) +
       '&customerPhone=' + encodeURIComponent(phone);
-    const proxyEnquiry = 'https://api.allorigins.win/get?url=' + encodeURIComponent(enquiryGasUrl);
+    const proxyEnquiry = 'https://corsproxy.io/?' + encodeURIComponent(enquiryGasUrl);
     fetch(proxyEnquiry)
       .then(r => r.json())
-      .then(r => {
-        const res = JSON.parse(r.contents);
+      .then(res => {
         btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
         openWhatsApp(phone, name, res.enquiryId);
       })
