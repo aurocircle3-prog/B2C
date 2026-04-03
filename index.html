@@ -171,11 +171,11 @@
     CAT_ID = getParam('cat');
     if (!CAT_ID) { showState('🔗', 'No Catalog Found', 'Please use a valid catalog link.'); return; }
 
-    window.handleJSONP = function(data) { handleLoad(data); };
-    const s = document.createElement('script');
-    s.src = GAS_URL + '?action=getCatalog&cat=' + CAT_ID + '&callback=handleJSONP';
-    s.onerror = () => showState('⚠️', 'Error', 'Failed to load catalog');
-    document.head.appendChild(s);
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(GAS_URL + '?action=getCatalog&cat=' + CAT_ID);
+    fetch(proxyUrl)
+      .then(r => r.json())
+      .then(r => handleLoad(JSON.parse(r.contents)))
+      .catch(err => showState('⚠️', 'Error', 'Failed to load catalog'));
   };
 
   function handleLoad(res) {
@@ -299,20 +299,24 @@
     const btn   = document.getElementById('wa-btn');
     btn.disabled = true; btn.innerText = '⏳ Saving…';
 
-    window.handleEnquiryJSONP = function(res) {
-      btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
-      openWhatsApp(phone, name, res.enquiryId);
-    };
-    const sc = document.createElement('script');
-    sc.src = GAS_URL + '?action=saveEnquiry' +
+    const enquiryGasUrl = GAS_URL + '?action=saveEnquiry' +
       '&catId=' + encodeURIComponent(CAT_ID) +
       '&firmName=' + encodeURIComponent(firmName) +
       '&cartItems=' + encodeURIComponent(JSON.stringify(cart)) +
       '&customerName=' + encodeURIComponent(name) +
-      '&customerPhone=' + encodeURIComponent(phone) +
-      '&callback=handleEnquiryJSONP';
-    sc.onerror = () => { btn.disabled = false; btn.innerText = 'Send Enquiry via WhatsApp'; openWhatsApp(phone, name, null); };
-    document.head.appendChild(sc);
+      '&customerPhone=' + encodeURIComponent(phone);
+    const proxyEnquiry = 'https://api.allorigins.win/get?url=' + encodeURIComponent(enquiryGasUrl);
+    fetch(proxyEnquiry)
+      .then(r => r.json())
+      .then(r => {
+        const res = JSON.parse(r.contents);
+        btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
+        openWhatsApp(phone, name, res.enquiryId);
+      })
+      .catch(() => {
+        btn.disabled = false; btn.innerText = 'Send Enquiry via WhatsApp';
+        openWhatsApp(phone, name, null);
+      });
   }
 
   function openWhatsApp(phone, name, enquiryId) {
