@@ -171,10 +171,11 @@
     CAT_ID = getParam('cat');
     if (!CAT_ID) { showState('🔗', 'No Catalog Found', 'Please use a valid catalog link.'); return; }
 
-    fetch(GAS_URL + '?action=getCatalog&cat=' + CAT_ID, {redirect: 'follow'})
-      .then(r => r.json())
-      .then(handleLoad)
-      .catch(err => showState('⚠️', 'Error', err.message));
+    window.handleJSONP = function(data) { handleLoad(data); };
+    const s = document.createElement('script');
+    s.src = GAS_URL + '?action=getCatalog&cat=' + CAT_ID + '&callback=handleJSONP';
+    s.onerror = () => showState('⚠️', 'Error', 'Failed to load catalog');
+    document.head.appendChild(s);
   };
 
   function handleLoad(res) {
@@ -298,23 +299,20 @@
     const btn   = document.getElementById('wa-btn');
     btn.disabled = true; btn.innerText = '⏳ Saving…';
 
-    const url = GAS_URL + '?action=saveEnquiry' +
+    window.handleEnquiryJSONP = function(res) {
+      btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
+      openWhatsApp(phone, name, res.enquiryId);
+    };
+    const sc = document.createElement('script');
+    sc.src = GAS_URL + '?action=saveEnquiry' +
       '&catId=' + encodeURIComponent(CAT_ID) +
       '&firmName=' + encodeURIComponent(firmName) +
       '&cartItems=' + encodeURIComponent(JSON.stringify(cart)) +
       '&customerName=' + encodeURIComponent(name) +
-      '&customerPhone=' + encodeURIComponent(phone);
-
-    fetch(url)
-      .then(r => r.json())
-      .then(res => {
-        btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
-        openWhatsApp(phone, name, res.enquiryId);
-      })
-      .catch(() => {
-        btn.disabled = false; btn.innerText = 'Send Enquiry via WhatsApp';
-        openWhatsApp(phone, name, null);
-      });
+      '&customerPhone=' + encodeURIComponent(phone) +
+      '&callback=handleEnquiryJSONP';
+    sc.onerror = () => { btn.disabled = false; btn.innerText = 'Send Enquiry via WhatsApp'; openWhatsApp(phone, name, null); };
+    document.head.appendChild(sc);
   }
 
   function openWhatsApp(phone, name, enquiryId) {
