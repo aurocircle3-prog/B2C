@@ -171,7 +171,7 @@
     CAT_ID = getParam('cat');
     if (!CAT_ID) { showState('🔗', 'No Catalog Found', 'Please use a valid catalog link.'); return; }
 
-    fetch(GAS_URL + '?action=getCatalog&cat=' + CAT_ID)
+    fetch(GAS_URL + '?action=getCatalog&cat=' + CAT_ID, {redirect: 'follow'})
       .then(r => r.json())
       .then(handleLoad)
       .catch(err => showState('⚠️', 'Error', err.message));
