@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold      : #c9a84c;
+      --gold-light: #e8d5a3;
+      --gold-dark : #9a7a2e;
+      --black     : #0e0e0e;
+      --off-white : #faf8f4;
+      --warm-gray : #ede9e0;
+      --text-muted: #8a8070;
+      --red       : #c0392b;
+      --radius    : 4px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Jost', sans-serif; background: var(--off-white); color: var(--black); min-height: 100vh; }
+
+    /* HEADER */
+    .header { background: var(--black); color: white; padding: 22px 24px 18px; text-align: center; position: sticky; top: 0; z-index: 500; border-bottom: 1px solid #222; }
+    .header-firm { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; letter-spacing: 4px; color: var(--gold-light); text-transform: uppercase; }
+    .header-sub { font-size: 10px; letter-spacing: 3px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; }
+    .cart-btn { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: var(--gold); color: var(--black); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .cart-badge { position: absolute; top: -4px; right: -4px; background: white; color: var(--black); border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center; font-weight: 700; }
+
+    /* FILTER */
+    .filter-bar { background: white; border-bottom: 1px solid var(--warm-gray); padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; position: sticky; top: 80px; z-index: 400; }
+    .filter-bar input, .filter-bar select { font-family: 'Jost', sans-serif; font-size: 12px; padding: 7px 10px; border: 1px solid #ddd; border-radius: var(--radius); background: var(--off-white); color: var(--black); outline: none; flex: 1; min-width: 90px; }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--gold); }
+    .item-count-bar { padding: 8px 16px; font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--warm-gray); }
+
+    /* GRID */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 16px; padding: 16px 16px 120px; max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 500px) { .product-grid { grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px 10px 120px; } .filter-bar { top: 72px; } }
+
+    .product-card { background: white; border: 1px solid #ece8e0; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.2s; }
+    .product-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+    .product-card.in-cart { border-color: var(--gold); }
+
+    /* IMAGE */
+    .img-wrap { position: relative; width: 100%; aspect-ratio: 3/4; overflow: hidden; background: var(--warm-gray); }
+    .img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+    .no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; letter-spacing: 2px; color: #bbb; text-transform: uppercase; background: linear-gradient(145deg, #f0ece4, #e8e3d8); }
+    .watermark { position: absolute; inset: 0; pointer-events: none; user-select: none; display: flex; align-items: center; justify-content: center; }
+    .watermark-text { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.28); letter-spacing: 3px; text-transform: uppercase; transform: rotate(-30deg); white-space: nowrap; }
+    .cart-tick { position: absolute; top: 8px; right: 8px; background: var(--gold); color: white; width: 24px; height: 24px; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+    .in-cart .cart-tick { display: flex; }
+
+    /* CARD INFO */
+    .product-info { padding: 10px 10px 12px; flex-grow: 1; display: flex; flex-direction: column; gap: 6px; }
+    .design-no { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600; color: var(--gold-dark); letter-spacing: 1px; }
+    .category-tag { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+    .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; border-top: 1px solid var(--warm-gray); padding-top: 6px; }
+    .spec-item { font-size: 10px; color: #777; }
+    .spec-item strong { display: block; font-size: 11px; color: var(--black); font-weight: 500; }
+    .add-btn { margin-top: auto; width: 100%; padding: 9px; border: 1.5px solid var(--gold); border-radius: var(--radius); background: transparent; color: var(--gold-dark); font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all 0.18s; }
+    .add-btn:hover { background: var(--gold); color: white; }
+    .remove-btn { margin-top: auto; width: 100%; padding: 9px; border: 1.5px solid #ddd; border-radius: var(--radius); background: #fdf5f5; color: var(--red); font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; }
+    .remove-btn:hover { background: var(--red); color: white; border-color: var(--red); }
+
+    /* CART DRAWER */
+    .cart-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 800; }
+    .cart-drawer { position: fixed; right: 0; top: 0; height: 100%; width: min(400px, 100%); background: white; z-index: 900; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .cart-overlay.open { display: block; }
+    .cart-overlay.open .cart-drawer { transform: translateX(0); }
+    .cart-header { padding: 20px; border-bottom: 1px solid var(--warm-gray); display: flex; justify-content: space-between; align-items: center; background: var(--black); color: white; }
+    .cart-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 300; letter-spacing: 2px; }
+    .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1; }
+    .cart-items { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .cart-item { display: flex; gap: 12px; padding: 10px; border: 1px solid var(--warm-gray); border-radius: 4px; background: var(--off-white); }
+    .cart-item-img { width: 60px; height: 75px; object-fit: cover; border-radius: 3px; flex-shrink: 0; background: var(--warm-gray); }
+    .cart-item-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .cart-item-design { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 600; color: var(--gold-dark); }
+    .cart-item-specs { font-size: 11px; color: #666; line-height: 1.6; }
+    .cart-item-remove { background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px; align-self: flex-start; padding: 0 4px; }
+    .cart-item-remove:hover { color: var(--red); }
+    .cart-footer { padding: 16px; border-top: 1px solid var(--warm-gray); display: flex; flex-direction: column; gap: 10px; background: white; }
+    .cart-total { display: flex; justify-content: space-between; font-weight: 500; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--warm-gray); }
+    .customer-fields { display: flex; flex-direction: column; gap: 8px; }
+    .customer-fields input { font-family: 'Jost', sans-serif; font-size: 13px; padding: 9px 12px; border: 1px solid #ddd; border-radius: var(--radius); outline: none; width: 100%; }
+    .customer-fields input:focus { border-color: var(--gold); }
+    .wa-btn { background: #25D366; color: white; border: none; padding: 13px; border-radius: var(--radius); font-family: 'Jost', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 1px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .wa-btn:hover { background: #1eb856; }
+    .wa-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* STATES */
+    .full-page-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 12px; padding: 40px 20px; text-align: center; }
+    .state-icon { font-size: 48px; }
+    .state-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--gold-dark); }
+    .state-msg { font-size: 14px; color: var(--text-muted); }
+    .loader-dots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+    .loader-dots span { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; animation: bounce 1.2s infinite; }
+    .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--black); color: white; padding: 10px 22px; border-radius: 50px; font-size: 13px; z-index: 999; transition: transform 0.3s; white-space: nowrap; pointer-events: none; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- IMPORTANT: Replace this with your actual GAS deployment URL -->
+<script>
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyycr5TbKnee78-Tu7e4ZETvNYMBJbHWyMIeuR_nWGCBPtWOK3g_W7Qqs9x39torhYm/exec';
+</script>
+
+<header class="header" id="site-header" style="display:none;">
+  <div class="header-firm" id="firm-name">—</div>
+  <div class="header-sub" id="cat-name">Exclusive Collection</div>
+  <button class="cart-btn" onclick="openCart()">
+    🛒<span class="cart-badge" id="cart-badge">0</span>
+  </button>
+</header>
+
+<div class="filter-bar" id="filter-bar" style="display:none;">
+  <input type="text" id="f-search" placeholder="Search design…" oninput="applyFilters()">
+  <select id="f-cat" onchange="applyFilters()"><option value="">All Categories</option></select>
+  <select id="f-melt" onchange="applyFilters()"><option value="">All Melting</option></select>
+</div>
+<div class="item-count-bar" id="count-bar" style="display:none;"></div>
+
+<main id="main-content">
+  <div class="full-page-state" id="loader">
+    <div class="state-icon">✦</div>
+    <div class="state-title">Loading Collection</div>
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+  </div>
+</main>
+
+<!-- CART -->
+<div class="cart-overlay" id="cart-overlay" onclick="handleOverlayClick(event)">
+  <div class="cart-drawer">
+    <div class="cart-header">
+      <h3>YOUR SELECTION</h3>
+      <button class="close-btn" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-items" id="cart-items-list">
+      <p style="text-align:center;color:#aaa;font-size:13px;margin-top:30px;">Your cart is empty</p>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total"><span>Total Items</span><span id="cart-total-count">0</span></div>
+      <div class="cart-total" style="border:none;padding:0;"><span>Total Net Weight</span><span id="cart-total-wt">0.00 g</span></div>
+      <div class="customer-fields">
+        <input type="text" id="cust-name" placeholder="Your Name (optional)">
+        <input type="tel" id="cust-phone" placeholder="WhatsApp Number (with country code)">
+      </div>
+      <button class="wa-btn" id="wa-btn" onclick="sendEnquiry()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send Enquiry via WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let allProducts = [], filtered = [], cart = [], firmName = '', CAT_ID = '';
+
+  // Read catId from URL
+  function getParam(name) {
+    const match = window.location.search.match(new RegExp('[?&]' + name + '=([^&#]+)'));
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+
+  window.onload = function() {
+    CAT_ID = getParam('cat');
+    if (!CAT_ID) { showState('🔗', 'No Catalog Found', 'Please use a valid catalog link.'); return; }
+
+    fetch(GAS_URL + '?action=getCatalog&cat=' + CAT_ID)
+      .then(r => r.json())
+      .then(handleLoad)
+      .catch(err => showState('⚠️', 'Error', err.message));
+  };
+
+  function handleLoad(res) {
+    if (res.status !== 'success') {
+      const icons = { expired: '⏳', empty: '📭', error: '⚠️' };
+      showState(icons[res.status] || '⚠️', res.status === 'expired' ? 'Catalog Expired' : 'Unavailable', res.message);
+      return;
+    }
+    firmName    = res.firmName;
+    allProducts = res.products;
+    filtered    = [...allProducts];
+    document.getElementById('firm-name').innerText = firmName.toUpperCase();
+    document.getElementById('cat-name').innerText  = res.catName + ' · Expires ' + res.expiry;
+    document.getElementById('site-header').style.display = 'block';
+    document.getElementById('filter-bar').style.display  = 'flex';
+    document.getElementById('count-bar').style.display   = 'block';
+    populateFilters();
+    renderGrid();
+  }
+
+  function populateFilters() {
+    const cats  = [...new Set(allProducts.map(p => p.Category))].filter(Boolean).sort();
+    const melts = [...new Set(allProducts.map(p => p.Melting))].filter(Boolean).sort();
+    const cSel = document.getElementById('f-cat'), mSel = document.getElementById('f-melt');
+    cats .forEach(c => cSel.innerHTML  += `<option value="${c}">${c}</option>`);
+    melts.forEach(m => mSel.innerHTML  += `<option value="${m}">${m}</option>`);
+  }
+
+  function applyFilters() {
+    const s = document.getElementById('f-search').value.toLowerCase();
+    const cat = document.getElementById('f-cat').value;
+    const melt = document.getElementById('f-melt').value;
+    filtered = allProducts.filter(p =>
+      (!s    || p.Design_No.toLowerCase().includes(s)) &&
+      (!cat  || p.Category === cat) &&
+      (!melt || p.Melting  === melt)
+    );
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const main = document.getElementById('main-content');
+    document.getElementById('count-bar').innerText = filtered.length + ' of ' + allProducts.length + ' items';
+    if (filtered.length === 0) {
+      main.innerHTML = `<div class="full-page-state"><div class="state-icon">🔍</div><div class="state-title">No Results</div><div class="state-msg">Try a different filter</div></div>`;
+      return;
+    }
+    main.innerHTML = `<div class="product-grid">${filtered.map(renderCard).join('')}</div>`;
+  }
+
+  function renderCard(p) {
+    const inCart = cart.some(c => c.Design_No === p.Design_No);
+    return `
+      <div class="product-card ${inCart ? 'in-cart' : ''}" id="card-${p.Design_No}">
+        <div class="img-wrap">
+          ${p.Image ? `<img src="${p.Image}" alt="${p.Design_No}" loading="lazy">` : `<div class="no-img">No Image</div>`}
+          <div class="watermark"><span class="watermark-text">${firmName}</span></div>
+          <div class="cart-tick">✓</div>
+        </div>
+        <div class="product-info">
+          <div class="design-no">${p.Design_No}</div>
+          <div class="category-tag">${p.Category || '—'}</div>
+          <div class="specs-grid">
+            <div class="spec-item">Net Weight<strong>${p.net_wt ? p.net_wt + ' g' : '—'}</strong></div>
+            <div class="spec-item">Melting<strong>${p.Melting || '—'}</strong></div>
+          </div>
+          ${inCart
+            ? `<button class="remove-btn" onclick="removeItem('${p.Design_No}')">✕ Remove</button>`
+            : `<button class="add-btn" onclick="addItem('${p.Design_No}')">+ Add to Cart</button>`}
+        </div>
+      </div>`;
+  }
+
+  function addItem(id) {
+    const p = allProducts.find(x => x.Design_No === id);
+    if (!p || cart.some(c => c.Design_No === id)) return;
+    cart.push(p); updateCartBadge(); refreshCard(id); showToast('Added: ' + id);
+  }
+  function removeItem(id) {
+    cart = cart.filter(c => c.Design_No !== id); updateCartBadge(); refreshCard(id); renderCartDrawer(); showToast('Removed: ' + id);
+  }
+  function refreshCard(id) {
+    const p = allProducts.find(x => x.Design_No === id);
+    const card = document.getElementById('card-' + id);
+    if (card && p) card.outerHTML = renderCard(p);
+  }
+  function updateCartBadge() {
+    const b = document.getElementById('cart-badge');
+    b.innerText = cart.length;
+    b.style.display = cart.length > 0 ? 'flex' : 'none';
+  }
+
+  function openCart() { renderCartDrawer(); document.getElementById('cart-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeCart() { document.getElementById('cart-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('cart-overlay')) closeCart(); }
+
+  function renderCartDrawer() {
+    const list = document.getElementById('cart-items-list');
+    if (cart.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:#aaa;font-size:13px;margin-top:30px;">Your cart is empty</p>';
+    } else {
+      list.innerHTML = cart.map(p => `
+        <div class="cart-item">
+          ${p.Image ? `<img class="cart-item-img" src="${p.Image}" alt="${p.Design_No}">` : `<div class="cart-item-img"></div>`}
+          <div class="cart-item-info">
+            <div class="cart-item-design">${p.Design_No}</div>
+            <div class="cart-item-specs">${p.Category}<br>NW: <b>${p.net_wt ? p.net_wt+'g' : '—'}</b> · Melting: <b>${p.Melting||'—'}</b></div>
+          </div>
+          <button class="cart-item-remove" onclick="removeItem('${p.Design_No}')">×</button>
+        </div>`).join('');
+    }
+    const totalWt = cart.reduce((s, p) => s + (p.net_wt || 0), 0);
+    document.getElementById('cart-total-count').innerText = cart.length;
+    document.getElementById('cart-total-wt').innerText    = totalWt.toFixed(2) + ' g';
+  }
+
+  function sendEnquiry() {
+    if (cart.length === 0) { showToast('Please add items first'); return; }
+    const phone = document.getElementById('cust-phone').value.trim();
+    const name  = document.getElementById('cust-name').value.trim();
+    const btn   = document.getElementById('wa-btn');
+    btn.disabled = true; btn.innerText = '⏳ Saving…';
+
+    const url = GAS_URL + '?action=saveEnquiry' +
+      '&catId=' + encodeURIComponent(CAT_ID) +
+      '&firmName=' + encodeURIComponent(firmName) +
+      '&cartItems=' + encodeURIComponent(JSON.stringify(cart)) +
+      '&customerName=' + encodeURIComponent(name) +
+      '&customerPhone=' + encodeURIComponent(phone);
+
+    fetch(url)
+      .then(r => r.json())
+      .then(res => {
+        btn.disabled = false; btn.innerText = '✓ Send Enquiry via WhatsApp';
+        openWhatsApp(phone, name, res.enquiryId);
+      })
+      .catch(() => {
+        btn.disabled = false; btn.innerText = 'Send Enquiry via WhatsApp';
+        openWhatsApp(phone, name, null);
+      });
+  }
+
+  function openWhatsApp(phone, name, enquiryId) {
+    const lines = [
+      `*Jewellery Enquiry — ${firmName}*`,
+      enquiryId ? `Ref: ${enquiryId}` : '',
+      name ? `Customer: ${name}` : '',
+      '',
+      `*Items Selected (${cart.length}):*`,
+      ...cart.map((p, i) => `${i+1}. *${p.Design_No}*\n   Category: ${p.Category}\n   Net Wt: ${p.net_wt ? p.net_wt+'g' : '—'}\n   Melting: ${p.Melting||'—'}`),
+      '',
+      `*Total Net Weight: ${cart.reduce((s,p) => s+(p.net_wt||0), 0).toFixed(2)}g*`,
+      '',
+      'Please share pricing & availability.'
+    ].filter(Boolean).join('\n');
+
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+    window.open(cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(lines)}` : `https://wa.me/?text=${encodeURIComponent(lines)}`, '_blank');
+  }
+
+  function showState(icon, title, msg) {
+    document.getElementById('main-content').innerHTML =
+      `<div class="full-page-state"><div class="state-icon">${icon}</div><div class="state-title">${title}</div><div class="state-msg">${msg}</div></div>`;
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  document.addEventListener('keydown', e => { if (e.ctrlKey && ['s','u','c','a','p'].includes(e.key)) e.preventDefault(); });
+</script>
+</body>
+</html>
